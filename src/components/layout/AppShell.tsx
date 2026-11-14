@@ -5,9 +5,11 @@ import { cn } from "@/lib/utils";
 import { Sidebar } from "./Sidebar";
 import { Header } from "./Header";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
+import { useAuth } from "@/auth/AuthContext";
 
 export function AppShell() {
-  const [collapsed, setCollapsed] = useLocalStorage("rm.sidebar.collapsed", false);
+  const { user } = useAuth();
+  const [collapsed, setCollapsed] = useLocalStorage(`rm.${user?.id ?? "anonymous"}.sidebar.collapsed`, false);
   const [mobile, setMobile] = useState(false);
   const { pathname } = useLocation();
   return (

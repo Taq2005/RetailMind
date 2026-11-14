@@ -7,6 +7,7 @@ import { HeroDemo } from "@/components/landing/HeroDemo";
 import { Walkthrough } from "@/components/landing/Walkthrough";
 import { SqlHighlight } from "@/components/ask/SqlHighlight";
 import { usePageTitle } from "@/hooks/usePageTitle";
+import { DEMO_ACCOUNT_EMAIL } from "@/config";
 
 const TRUST_SQL = `-- "Which SKUs will stock out in 14 days?"
 SELECT p.name                                  AS product,
@@ -46,7 +47,7 @@ export default function Landing() {
               </Button>
             </Item>
             <Item>
-              <p className="mt-5 text-[13px] text-slate-500">The demo runs on synthetic data for a $12M apparel and electronics retailer. No sign-up.</p>
+              <p className="mt-5 text-[13px] text-slate-500">The demo runs on synthetic data for a $12M retailer. Sign in as <code>{DEMO_ACCOUNT_EMAIL}</code> to open the full workspace.</p>
             </Item>
           </Stagger>
 

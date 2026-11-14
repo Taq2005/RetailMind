@@ -4,8 +4,10 @@ import { useEffect } from "react";
 import { ScrollProgress, SmoothScroll } from "@/components/motion/primitives";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner";
-import { AppShell } from "@/components/layout/AppShell";
 import { SiteLayout } from "@/components/site/SiteLayout";
+import { AuthProvider } from "@/auth/AuthContext";
+import { ProtectedApp } from "@/auth/ProtectedApp";
+import { Auth } from "@/pages/Auth";
 
 const Landing = lazy(() => import("@/pages/Landing"));
 const Dashboard = lazy(() => import("@/pages/Dashboard"));
@@ -29,12 +31,15 @@ function ScrollToTop() {
 
 export default function App() {
   return (
-    <TooltipProvider>
-      <SmoothScroll />
-      <ScrollProgress />
-      <ScrollToTop />
-      <Suspense fallback={<div className="min-h-screen" />}>
-        <Routes>
+    <AuthProvider>
+      <TooltipProvider>
+        <SmoothScroll />
+        <ScrollProgress />
+        <ScrollToTop />
+        <Suspense fallback={<div className="min-h-screen" />}>
+          <Routes>
+            <Route path="/login" element={<Auth mode="login" />} />
+            <Route path="/signup" element={<Auth mode="signup" />} />
             <Route element={<SiteLayout />}>
               <Route path="/" element={<Landing />} />
               <Route path="/about" element={<About />} />
@@ -44,7 +49,7 @@ export default function App() {
               <Route path="/proposed-project" element={<ProposedProject />} />
               <Route path="/contact" element={<Contact />} />
             </Route>
-            <Route path="/app" element={<AppShell />}>
+            <Route path="/app" element={<ProtectedApp />}>
               <Route index element={<Dashboard />} />
               <Route path="ask" element={<AskAI />} />
               <Route path="connectors" element={<Connectors />} />
@@ -54,9 +59,10 @@ export default function App() {
               <Route path="settings" element={<Placeholders kind="settings" />} />
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </Suspense>
-      <Toaster />
-    </TooltipProvider>
+          </Routes>
+        </Suspense>
+        <Toaster />
+      </TooltipProvider>
+    </AuthProvider>
   );
 }

@@ -5,6 +5,12 @@ export const COMPANY = {
   emailSubject: "Hello RetailMind",
 } as const;
 
+export const DEMO_ACCOUNT_EMAIL = "demo@gmail.com";
+
+export function isDemoEmail(email: string | null | undefined) {
+  return email?.trim().toLowerCase() === DEMO_ACCOUNT_EMAIL;
+}
+
 export const SITE_LINKS = [
   { to: "/", label: "Home", end: true },
   { to: "/about", label: "About" },

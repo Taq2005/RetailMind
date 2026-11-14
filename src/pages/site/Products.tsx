@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Item, Reveal, Stagger } from "@/components/motion/primitives";
 import { PageHeader } from "@/components/site/PageHeader";
 import { usePageTitle } from "@/hooks/usePageTitle";
+import { DEMO_ACCOUNT_EMAIL } from "@/config";
 
 type Status = "demo" | "planned";
 const FEATURES: { name: string; body: string; status: Status; to?: string }[] = [
@@ -74,7 +75,7 @@ export default function Products() {
         <Reveal delay={0.1} className="self-center">
           <div className="rounded-2xl border border-slate-200 bg-white p-7 shadow-lift">
             <p className="text-[18px] font-semibold leading-snug tracking-[-0.025em] text-slate-900">See the platform working on a sample retailer.</p>
-            <p className="mt-2 text-[14px] leading-relaxed text-slate-500">The demo uses synthetic data. No sign-up.</p>
+            <p className="mt-2 text-[14px] leading-relaxed text-slate-500">The sample data is available after signing in as <code>{DEMO_ACCOUNT_EMAIL}</code>.</p>
             <Button asChild className="mt-5">
               <Link to="/app">
                 Open the demo <ArrowRight />

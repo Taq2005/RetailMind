@@ -8,6 +8,8 @@ import { answer, SUGGESTED_PROMPTS, type AskResult, type Fallback } from "@/data
 import { loadDB } from "@/data/seed";
 import { Summary, ResponseCard } from "@/components/ask/ResponseCard";
 import { Skeleton } from "@/components/motion/primitives";
+import { useDB } from "@/hooks/useDB";
+import { NoSalesData } from "@/components/NoSalesData";
 
 type Step = "schema" | "sql" | "run";
 interface UserMsg {
@@ -35,6 +37,7 @@ let uid = 0;
 const nextId = () => `m${++uid}`;
 
 export default function AskAI() {
+  const { isDemoAccount } = useDB();
   const [params, setParams] = useSearchParams();
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [draft, setDraft] = useState("");
@@ -49,7 +52,7 @@ export default function AskAI() {
   const ask = useCallback(
     async (q: string) => {
       const question = q.trim();
-      if (!question || busy) return;
+      if (!isDemoAccount || !question || busy) return;
       setBusy(true);
       setDraft("");
       const u: UserMsg = { id: nextId(), role: "user", text: question };
@@ -86,7 +89,7 @@ export default function AskAI() {
       patch(b.id, { step: "done", reveal: 1 });
       setBusy(false);
     },
-    [busy, patch]
+    [busy, isDemoAccount, patch]
   );
 
   // Deep link from search / dashboard: /app/ask?q=...
@@ -110,6 +113,8 @@ export default function AskAI() {
     e.preventDefault();
     void ask(draft);
   };
+
+  if (!isDemoAccount) return <NoSalesData />;
 
   return (
     <div className="mx-auto grid max-w-[1400px] gap-0 px-0 lg:h-[calc(100vh-3.5rem)] lg:grid-cols-[minmax(380px,440px)_minmax(0,1fr)]">

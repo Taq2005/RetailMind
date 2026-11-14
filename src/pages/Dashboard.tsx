@@ -12,6 +12,7 @@ import { CategoryDonut } from "@/components/dashboard/CategoryDonut";
 import { VelocityList } from "@/components/dashboard/VelocityList";
 import { Reveal, Skeleton, Stagger } from "@/components/motion/primitives";
 import { cn, fmtUSD } from "@/lib/utils";
+import { NoSalesData } from "@/components/NoSalesData";
 
 function Panel({ title, sub, action, children, className }: { title: string; sub?: string; action?: React.ReactNode; children: React.ReactNode; className?: string }) {
   return (
@@ -32,7 +33,7 @@ const TONE = { bad: "bg-rose-50 text-rose-600", warn: "bg-amber-50 text-amber-70
 const ICON = { stock: AlertTriangle, risk: UserMinus, returns: TrendingDown } as const;
 
 export default function Dashboard() {
-  const db = useDB();
+  const { db, loading, error, isDemoAccount } = useDB();
   const [range, setRange] = useState<RangeKey>("30d");
   const [channel, setChannel] = useState<ChannelFilter>("all");
 
@@ -50,17 +51,21 @@ export default function Dashboard() {
     };
   }, [db, range, channel]);
 
+  if (!isDemoAccount) return <NoSalesData />;
+
   return (
     <div className="mx-auto max-w-[1280px] px-4 pb-16 pt-8 sm:px-6">
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }} className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-[26px] font-semibold tracking-[-0.035em] text-slate-900">Overview</h1>
-          <p className="mt-1 text-sm text-slate-500">{view ? `${windowLabel(view.k.window)}, ${view.k.orders.toLocaleString("en-US")} orders` : "Loading Northwind Apparel & Tech"}</p>
+          <p className="mt-1 text-sm text-slate-500">{view ? `${windowLabel(view.k.window)}, ${view.k.orders.toLocaleString("en-US")} orders` : "Demo analytics"}</p>
         </div>
         <FilterBar range={range} channel={channel} onRange={setRange} onChannel={setChannel} />
       </motion.div>
 
-      {!view ? (
+      {error ? (
+        <p role="alert" className="mt-6 rounded-lg border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">{error}</p>
+      ) : loading || !view ? (
         <DashboardSkeleton />
       ) : (
         <>

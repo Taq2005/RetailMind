@@ -13,6 +13,8 @@ import { NAV } from "./nav";
 import { SUGGESTED_PROMPTS } from "@/data/askEngine";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { useAuth } from "@/auth/AuthContext";
+import { isDemoEmail } from "@/config";
 
 export const WORKSPACES = [
   { id: "nw", name: "Northwind Apparel & Tech", note: "Production" },
@@ -39,12 +41,28 @@ const ICONS = { stock: AlertTriangle, sync: AlertTriangle, report: FileText, use
 
 export function Header({ onOpenMobileNav }: { onOpenMobileNav: () => void }) {
   const navigate = useNavigate();
-  const [ws, setWs] = useLocalStorage("rm.workspace", "nw");
-  const [read, setRead] = useLocalStorage<string[]>("rm.alerts.read", []);
+  const { user, signOut } = useAuth();
+  const isDemoAccount = isDemoEmail(user?.email);
+  const userKey = user?.id ?? "anonymous";
+  const availableWorkspaces = isDemoAccount ? WORKSPACES : [{ id: "personal", name: "My workspace", note: "Private" }];
+  const [ws, setWs] = useLocalStorage(`rm.${userKey}.workspace`, isDemoAccount ? "nw" : "personal");
+  const [read, setRead] = useLocalStorage<string[]>(`rm.${userKey}.alerts.read`, []);
   const [bellOpen, setBellOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
-  const unread = ALERTS.filter((a) => !read.includes(a.id));
-  const workspace = WORKSPACES.find((w) => w.id === ws) ?? WORKSPACES[0];
+  const alerts = isDemoAccount ? ALERTS : [];
+  const unread = alerts.filter((a) => !read.includes(a.id));
+  const workspace = availableWorkspaces.find((w) => w.id === ws) ?? availableWorkspaces[0];
+  const accountName = user?.user_metadata.full_name || user?.email || "Account";
+  const accountInitial = accountName[0]?.toUpperCase() ?? "A";
+
+  const logOut = async () => {
+    try {
+      await signOut();
+      navigate("/", { replace: true });
+    } catch (reason) {
+      toast.error(reason instanceof Error ? reason.message : "Could not sign out. Please try again.");
+    }
+  };
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -74,7 +92,7 @@ export function Header({ onOpenMobileNav }: { onOpenMobileNav: () => void }) {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="w-64">
             <DropdownMenuLabel>Workspaces</DropdownMenuLabel>
-            {WORKSPACES.map((w) => (
+            {availableWorkspaces.map((w) => (
               <DropdownMenuItem
                 key={w.id}
                 onSelect={() => {
@@ -108,7 +126,7 @@ export function Header({ onOpenMobileNav }: { onOpenMobileNav: () => void }) {
             open={bellOpen}
             onOpenChange={(o) => {
               setBellOpen(o);
-              if (!o) setRead(ALERTS.map((a) => a.id));
+              if (!o) setRead(alerts.map((a) => a.id));
             }}
           >
             <PopoverTrigger asChild>
@@ -136,12 +154,14 @@ export function Header({ onOpenMobileNav }: { onOpenMobileNav: () => void }) {
             <PopoverContent className="w-[360px] p-0">
               <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
                 <h2 className="text-sm font-semibold text-slate-900">Notifications</h2>
-                <button className="text-xs font-medium text-ink-700 hover:underline disabled:text-slate-400 disabled:no-underline" disabled={unread.length === 0} onClick={() => setRead(ALERTS.map((a) => a.id))}>
+                <button className="text-xs font-medium text-ink-700 hover:underline disabled:text-slate-400 disabled:no-underline" disabled={unread.length === 0} onClick={() => setRead(alerts.map((a) => a.id))}>
                   Mark all as read
                 </button>
               </div>
               <ul className="max-h-[360px] divide-y divide-slate-100 overflow-y-auto scrollbar-thin">
-                {ALERTS.map((a, i) => {
+                {alerts.length === 0 ? (
+                  <li className="px-4 py-8 text-center text-xs text-slate-400">No notifications yet</li>
+                ) : alerts.map((a, i) => {
                   const Icon = ICONS[a.icon];
                   const isNew = !read.includes(a.id);
                   return (
@@ -150,7 +170,7 @@ export function Header({ onOpenMobileNav }: { onOpenMobileNav: () => void }) {
                         className="flex w-full gap-3 px-4 py-3 text-left transition-colors hover:bg-slate-50"
                         onClick={() => {
                           setBellOpen(false);
-                          setRead(ALERTS.map((x) => x.id));
+                          setRead(alerts.map((x) => x.id));
                           navigate(a.href);
                         }}
                       >
@@ -176,13 +196,13 @@ export function Header({ onOpenMobileNav }: { onOpenMobileNav: () => void }) {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className="grid h-9 w-9 place-items-center rounded-full transition-transform hover:scale-105 active:scale-95" aria-label="Account menu">
-                <span className="grid h-8 w-8 place-items-center rounded-full bg-gradient-to-br from-amber-signal to-orange-400 text-[12px] font-semibold text-white ring-2 ring-white">MT</span>
+                <span className="grid h-8 w-8 place-items-center rounded-full bg-gradient-to-br from-amber-signal to-orange-400 text-[12px] font-semibold text-white ring-2 ring-white">{accountInitial}</span>
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-60">
               <div className="px-2.5 py-2">
-                <p className="text-[13px] font-medium text-slate-900">Muhammad Taqi</p>
-                <p className="text-xs text-slate-500">Admin, {workspace.name}</p>
+                <p className="truncate text-[13px] font-medium text-slate-900">{accountName}</p>
+                <p className="truncate text-xs text-slate-500">{user?.email}</p>
               </div>
               <DropdownMenuSeparator />
               <DropdownMenuItem onSelect={() => navigate("/app/settings")}>
@@ -195,20 +215,20 @@ export function Header({ onOpenMobileNav }: { onOpenMobileNav: () => void }) {
                 <CreditCard /> Plan and usage
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onSelect={() => navigate("/")}>
-                <LogOut /> Back to site
+              <DropdownMenuItem onSelect={() => void logOut()}>
+                <LogOut /> Sign out
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
       </header>
 
-      <SearchDialog open={searchOpen} onOpenChange={setSearchOpen} />
+      <SearchDialog open={searchOpen} onOpenChange={setSearchOpen} isDemoAccount={isDemoAccount} />
     </>
   );
 }
 
-function SearchDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
+function SearchDialog({ open, onOpenChange, isDemoAccount }: { open: boolean; onOpenChange: (o: boolean) => void; isDemoAccount: boolean }) {
   const navigate = useNavigate();
   const [value, setValue] = useState("");
   useEffect(() => {
@@ -228,7 +248,7 @@ function SearchDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o:
           <CommandInput autoFocus value={value} onValueChange={setValue} placeholder="Jump to a page or ask a question" />
           <CommandList>
             <CommandEmpty>Nothing matches. Press Enter to ask it as a question.</CommandEmpty>
-            {value.trim().length > 2 && (
+            {isDemoAccount && value.trim().length > 2 && (
               <CommandGroup heading="Ask AI">
                 <CommandItem value={`ask ${value}`} onSelect={() => ask(value)}>
                   <Sparkles /> Ask: <span className="truncate font-medium">{value}</span>
@@ -242,21 +262,25 @@ function SearchDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o:
                 </CommandItem>
               ))}
             </CommandGroup>
-            <CommandGroup heading="Suggested questions">
-              {SUGGESTED_PROMPTS.map((p) => (
-                <CommandItem key={p} value={`question ${p}`} onSelect={() => ask(p)}>
-                  <MessageSquareText /> {p}
-                </CommandItem>
-              ))}
-            </CommandGroup>
-            <CommandGroup heading="Recent">
-              <CommandItem value="recent loyalty" onSelect={() => go("/app/connectors")}>
-                <AlertTriangle /> Loyalty Platform connector
-              </CommandItem>
-              <CommandItem value="recent weekly brief" onSelect={() => go("/app/reports")}>
-                <FileText /> Weekly brief, Nov 9
-              </CommandItem>
-            </CommandGroup>
+            {isDemoAccount && (
+              <>
+                <CommandGroup heading="Suggested questions">
+                  {SUGGESTED_PROMPTS.map((p) => (
+                    <CommandItem key={p} value={`question ${p}`} onSelect={() => ask(p)}>
+                      <MessageSquareText /> {p}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+                <CommandGroup heading="Recent">
+                  <CommandItem value="recent loyalty" onSelect={() => go("/app/connectors")}>
+                    <AlertTriangle /> Loyalty Platform connector
+                  </CommandItem>
+                  <CommandItem value="recent weekly brief" onSelect={() => go("/app/reports")}>
+                    <FileText /> Weekly brief, Nov 9
+                  </CommandItem>
+                </CommandGroup>
+              </>
+            )}
           </CommandList>
         </Command>
       </DialogContent>

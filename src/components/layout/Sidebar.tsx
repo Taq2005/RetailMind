@@ -6,6 +6,8 @@ import { NAV } from "./nav";
 import { Wordmark } from "@/components/Logo";
 import { Tip } from "@/components/ui/tooltip";
 import { StatusDot } from "@/components/motion/primitives";
+import { useAuth } from "@/auth/AuthContext";
+import { isDemoEmail } from "@/config";
 
 interface Props {
   collapsed: boolean;
@@ -15,6 +17,9 @@ interface Props {
 }
 
 export function Sidebar({ collapsed, onToggle, mobileOpen, onCloseMobile }: Props) {
+  const { user } = useAuth();
+  const isDemoAccount = isDemoEmail(user?.email);
+
   return (
     <>
       {mobileOpen && <div className="fixed inset-0 z-40 bg-slate-900/30 backdrop-blur-[2px] lg:hidden" onClick={onCloseMobile} aria-hidden />}
@@ -43,26 +48,28 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onCloseMobile }: Prop
         </nav>
 
         <div className="space-y-3 border-t border-slate-200/80 p-3">
-          {!collapsed ? (
-            <NavLink to="/app/connectors" onClick={onCloseMobile} className="block rounded-lg border border-slate-200 bg-white p-3 shadow-sm transition-shadow hover:shadow-lift">
-              <div className="flex items-center justify-between text-xs">
-                <span className="font-medium text-slate-700">Query allowance</span>
-                <span className="num text-slate-500">1,284 / 5,000</span>
-              </div>
-              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-100">
-                <motion.div className="h-full rounded-full bg-ink-600" initial={{ width: 0 }} animate={{ width: "25.7%" }} transition={{ duration: 1, ease: [0.22, 1, 0.36, 1], delay: 0.3 }} />
-              </div>
-              <div className="mt-2.5 flex items-center gap-2 text-[11px] text-slate-500">
-                <StatusDot tone="bad" />
-                Loyalty Platform needs attention
-              </div>
-            </NavLink>
-          ) : (
-            <Tip label="Loyalty Platform needs attention" side="right">
-              <NavLink to="/app/connectors" className="mx-auto hidden h-9 w-9 place-items-center rounded-lg hover:bg-slate-100 lg:grid" aria-label="Connector status">
-                <StatusDot tone="bad" />
+          {isDemoAccount && (
+            !collapsed ? (
+              <NavLink to="/app/connectors" onClick={onCloseMobile} className="block rounded-lg border border-slate-200 bg-white p-3 shadow-sm transition-shadow hover:shadow-lift">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-medium text-slate-700">Query allowance</span>
+                  <span className="num text-slate-500">1,284 / 5,000</span>
+                </div>
+                <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-100">
+                  <motion.div className="h-full rounded-full bg-ink-600" initial={{ width: 0 }} animate={{ width: "25.7%" }} transition={{ duration: 1, ease: [0.22, 1, 0.36, 1], delay: 0.3 }} />
+                </div>
+                <div className="mt-2.5 flex items-center gap-2 text-[11px] text-slate-500">
+                  <StatusDot tone="bad" />
+                  Loyalty Platform needs attention
+                </div>
               </NavLink>
-            </Tip>
+            ) : (
+              <Tip label="Loyalty Platform needs attention" side="right">
+                <NavLink to="/app/connectors" className="mx-auto hidden h-9 w-9 place-items-center rounded-lg hover:bg-slate-100 lg:grid" aria-label="Connector status">
+                  <StatusDot tone="bad" />
+                </NavLink>
+              </Tip>
+            )
           )}
           <button
             onClick={onToggle}

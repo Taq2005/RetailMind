@@ -9,9 +9,16 @@ import { AddConnectorDialog } from "@/components/connectors/AddConnectorDialog";
 import { CONNECTORS } from "@/data/seed";
 import type { Connector } from "@/data/types";
 import { cn, sleep } from "@/lib/utils";
+import { useAuth } from "@/auth/AuthContext";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
+import { isDemoEmail } from "@/config";
 
 export default function Connectors() {
-  const [list, setList] = useState<Connector[]>(CONNECTORS);
+  const { user } = useAuth();
+  const isDemoAccount = isDemoEmail(user?.email);
+  const accountId = user?.id ?? "anonymous";
+  const storageKey = isDemoAccount ? `rm.demo.${accountId}.connectors` : `rm.account.${accountId}.connectors`;
+  const [list, setList] = useLocalStorage<Connector[]>(storageKey, isDemoAccount ? CONNECTORS : []);
   const [open, setOpen] = useState(false);
   const [fresh, setFresh] = useState<number | null>(null);
 

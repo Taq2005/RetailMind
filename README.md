@@ -16,20 +16,26 @@ Routes: `/` landing page with the sticky walkthrough, `/app` overview, `/app/ask
 Data Sources, Analytics, Reports and Settings have designed empty states.
 Open search with Cmd/Ctrl+K.
 
+### Authentication
+
+The app uses Supabase Auth for email/password sign-up and sign-in. Create a Supabase project, enable email authentication, then create `.env.local` with `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` set to the project URL and public anon key. Configure the Supabase Site URL and allowed redirect URLs for your local and deployed app URLs. Restart the Vite dev server after changing environment variables. Never put the Supabase `service_role` key in this frontend or share it in chat.
+
+All `/app` routes require a signed-in account. Only the authenticated `demo@gmail.com` account gets the generated Northwind demo analytics; other accounts see an empty sales-data state. Create and verify `demo@gmail.com` in Supabase Auth, then sign in with the password you set there. Ordinary users do not yet have a data-import path, and the simulated connector changes remain browser-local.
+
+The demo data is generated in the frontend and is fictional—not private customer data. This email-based demo switch is for the prototype only; it is not database row-level security. Before loading real business data, move it behind Supabase tables with owner IDs and row-level security policies.
+
 ## Data
 
-There is no live backend in this version. Every screen reads from `src/data/seed.ts`, a deterministic generator
+The demo account reads from `src/data/seed.ts`, a deterministic generator
 (about 95k orders, 20k customers, 58 products, 8 connectors) calibrated so the last 30 days land on:
 revenue $1.24M (+12.4% vs the previous 30 days), net margin 28.4%, AOV $142.50, retention 42.1%.
-All other numbers, charts and Ask AI tables are computed from the same rows.
+All dashboard numbers, charts and Ask AI tables for that account are computed from the same rows. Other accounts do not load this dataset.
 
 Check the calibration any time: `npx tsx scripts/check-seed.ts`
 
-### Loading it into Supabase / PostgreSQL
+### Prototype SQL files
 
-1. Run `db/schema.sql`
-2. Run `db/seed.sql` (customers, products, connectors and the last 14 days of orders)
-3. For the full year: `npm run db:seed -- --days=365` (about 95k orders, large file, load with `psql`)
+`db/schema.sql` and `db/seed.sql` are prototype/demo scripts with no per-user ownership or row-level security. They are not wired to the app and must not be used to store real multi-user data. For an isolated demo database, run `db/schema.sql` then `db/seed.sql`; a full-year seed can be generated with `npm run db:seed -- --days=365`.
 
 ## Ask AI
 
