@@ -1,8 +1,7 @@
 /** Company facts used across the public pages. Edit here, not in the page files. */
 export const COMPANY = {
   name: "RetailMind",
-  /** TODO: replace with the real contact address before sharing the site. */
-  email: "contact@retailmind.example",
+  email: "retailmind@gmail.com",
   emailSubject: "Hello RetailMind",
 } as const;
 
