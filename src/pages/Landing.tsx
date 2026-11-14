@@ -2,11 +2,11 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowRight, Eye, Lock, Route } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Wordmark } from "@/components/Logo";
 import { CountUp, Item, Reveal, Stagger } from "@/components/motion/primitives";
 import { HeroDemo } from "@/components/landing/HeroDemo";
 import { Walkthrough } from "@/components/landing/Walkthrough";
 import { SqlHighlight } from "@/components/ask/SqlHighlight";
+import { usePageTitle } from "@/hooks/usePageTitle";
 
 const TRUST_SQL = `-- "Which SKUs will stock out in 14 days?"
 SELECT p.name                                  AS product,
@@ -18,31 +18,11 @@ WHERE  p.stock_quantity / v.units_per_day < 14
 ORDER  BY days_of_cover;`;
 
 export default function Landing() {
+  usePageTitle();
   return (
     <div className="relative bg-background">
-      <header className="glass fixed inset-x-0 top-0 z-50 border-b border-slate-200/70">
-        <div className="mx-auto flex h-14 max-w-[1200px] items-center justify-between px-5 sm:px-6">
-          <Link to="/" aria-label="RetailMind home" className="rounded-md">
-            <Wordmark />
-          </Link>
-          <nav className="hidden items-center gap-1 sm:flex" aria-label="Sections">
-            {[
-              ["How it works", "#how"],
-              ["Trust", "#trust"],
-            ].map(([l, h]) => (
-              <a key={h} href={h} className="rounded-md px-3 py-1.5 text-[13px] font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900">
-                {l}
-              </a>
-            ))}
-          </nav>
-          <Button asChild size="sm">
-            <Link to="/app">Open the demo</Link>
-          </Button>
-        </div>
-      </header>
-
       {/* HERO */}
-      <section className="relative overflow-hidden pt-14">
+      <section className="relative overflow-hidden">
         <div className="ambient absolute inset-0" aria-hidden />
         <div className="grid-fade absolute inset-x-0 top-0 h-[560px]" aria-hidden />
         <div className="relative mx-auto grid max-w-[1200px] items-center gap-12 px-5 pb-20 pt-16 sm:px-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,520px)] lg:gap-14 lg:pb-28 lg:pt-24">
@@ -91,6 +71,24 @@ export default function Landing() {
               </Item>
             ))}
           </Stagger>
+          <p className="mx-auto max-w-[1200px] px-5 pb-5 text-[12.5px] text-slate-400 sm:px-6">Figures describe the synthetic sample workspace used in the demo. They are not customers or results.</p>
+        </div>
+
+        {/* IDENTITY */}
+        <div className="relative mx-auto grid max-w-[1200px] gap-10 px-5 py-20 sm:px-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-20 lg:py-28">
+          <Reveal>
+            <h2 className="max-w-[18ch] text-[30px] font-semibold leading-[1.1] tracking-[-0.035em] text-slate-950 sm:text-[38px]">Built in Pakistan, for retailers everywhere</h2>
+          </Reveal>
+          <Reveal delay={0.1}>
+            <p className="max-w-[52ch] text-[16px] leading-relaxed text-slate-600">
+              RetailMind is a retail analytics company. We help shop owners and buying teams understand their sales, stock and margins by asking questions in plain language, with the working always on show. We are starting with retailers in Pakistan, with international markets as the goal.
+            </p>
+            <div className="mt-6 flex flex-wrap gap-x-6 gap-y-2 text-[14px] font-medium">
+              <Link to="/about" className="text-ink-700 underline-offset-4 hover:underline">About the company</Link>
+              <Link to="/vision" className="text-ink-700 underline-offset-4 hover:underline">Vision and values</Link>
+              <Link to="/team" className="text-ink-700 underline-offset-4 hover:underline">The team</Link>
+            </div>
+          </Reveal>
         </div>
       </section>
 
@@ -153,12 +151,6 @@ export default function Landing() {
         </Reveal>
       </section>
 
-      <footer className="border-t border-slate-200 bg-white">
-        <div className="mx-auto flex max-w-[1200px] flex-col gap-3 px-5 py-8 text-[13px] text-slate-500 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-          <Wordmark />
-          <p>RetailMind is a product demo. All data shown is synthetic.</p>
-        </div>
-      </footer>
     </div>
   );
 }

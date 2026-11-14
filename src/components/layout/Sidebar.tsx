@@ -21,7 +21,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onCloseMobile }: Prop
       <aside
         aria-label="Primary"
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex flex-col border-r border-slate-200 bg-[#FBFBFC] transition-[width,transform] duration-300 ease-[cubic-bezier(.22,1,.36,1)]",
+          "fixed inset-y-0 left-0 z-50 flex flex-col border-r border-slate-200 bg-[#FBFBFC] transition-[width,transform] duration-300 [transition-timing-function:cubic-bezier(.22,1,.36,1)]",
           collapsed ? "lg:w-[68px]" : "lg:w-[248px]",
           "w-[260px]",
           mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
