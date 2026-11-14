@@ -1,0 +1,60 @@
+@import "@fontsource-variable/geist";
+@import "@fontsource-variable/geist-mono";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 216 20% 97%;
+    --foreground: 224 30% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 224 30% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 224 30% 11%;
+    --primary: 232 54% 32%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 20% 95%;
+    --secondary-foreground: 224 30% 16%;
+    --muted: 220 18% 95%;
+    --muted-foreground: 220 9% 40%;
+    --accent: 232 60% 96%;
+    --accent-foreground: 232 54% 28%;
+    --destructive: 356 72% 46%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 16% 90%;
+    --input: 220 16% 88%;
+    --ring: 232 54% 45%;
+    --radius: 0.625rem;
+  }
+  * { @apply border-border; }
+  html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-feature-settings: "cv11", "ss01", "tnum";
+    letter-spacing: -0.006em;
+  }
+  h1, h2, h3, h4 { letter-spacing: -0.028em; }
+  ::selection { background: hsl(232 70% 88%); }
+  :focus-visible { outline: 2px solid hsl(var(--ring)); outline-offset: 2px; border-radius: 6px; }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; }
+  }
+}
+
+@layer utilities {
+  .num { font-variant-numeric: tabular-nums; font-feature-settings: "tnum", "zero"; }
+  .glass { @apply bg-white/70 backdrop-blur-md; }
+  .ambient {
+    background:
+      radial-gradient(60rem 28rem at 12% -8%, hsl(232 80% 94% / .75), transparent 60%),
+      radial-gradient(40rem 22rem at 96% 4%, hsl(36 90% 92% / .6), transparent 62%);
+  }
+  .grid-fade {
+    background-image: linear-gradient(to right, hsl(220 16% 90% / .7) 1px, transparent 1px), linear-gradient(to bottom, hsl(220 16% 90% / .7) 1px, transparent 1px);
+    background-size: 44px 44px;
+    mask-image: radial-gradient(ellipse at 50% 0%, #000 20%, transparent 72%);
+  }
+  .scrollbar-thin { scrollbar-width: thin; scrollbar-color: hsl(220 14% 80%) transparent; }
+}
