@@ -1,6 +1,7 @@
 import { lazy, Suspense } from "react";
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { useEffect } from "react";
+import { Analytics } from "@vercel/analytics/react";
 import { ScrollProgress, SmoothScroll } from "@/components/motion/primitives";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner";
@@ -62,6 +63,7 @@ export default function App() {
           </Routes>
         </Suspense>
         <Toaster />
+        <Analytics />
       </TooltipProvider>
     </AuthProvider>
   );
