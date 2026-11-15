@@ -25,8 +25,8 @@ const TEAM = [
     goal: "Keep pricing fair and the company sustainable, with accounts that are open and honest.",
   },
   {
-    initials: "AK",
-    name: "Abdullah Khan",
+    initials: "MA",
+    name: "M. Abdullah",
     role: "Chief Marketing Officer (CMO)",
     does: ["Shapes the brand and how RetailMind is explained", "Researches retailers' needs, in Pakistan first and then abroad", "Leads outreach and communication with retailers"],
     goal: "Earn retailers' trust through clear, truthful communication about what the product does and does not do.",
