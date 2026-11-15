@@ -1,50 +1,37 @@
 # RetailMind
 
-Natural-language retail analytics, built as a React + TypeScript + Tailwind + shadcn-style UI + Recharts + Framer Motion app.
-Demo workspace: Northwind Apparel & Tech, an omnichannel apparel and electronics retailer at about $12M a year.
+**Retail decisions should not have to wait for a spreadsheet or an analyst.**
 
-## Run it
+[Experience RetailMind on Vercel](https://retail-mind-eight.vercel.app/)
 
-```bash
-npm install
-npm run dev          # http://localhost:5173
-npm run build        # type-check + production build
-npm run typecheck
-```
+## The problem
 
-Routes: `/` landing page with the sticky walkthrough, `/app` overview, `/app/ask`, `/app/connectors`.
-Data Sources, Analytics, Reports and Settings have designed empty states.
-Open search with Cmd/Ctrl+K.
+Picture a shop owner getting ready for the weekly buying meeting. Sales are spread across the point-of-sale system, the online store, and a warehouse export. They want to know which products are losing margin, whether online sales are growing, and what needs to be reordered.
 
-### Authentication
+The numbers may be in the business already, but getting a useful answer can mean exporting files, reconciling columns, building a spreadsheet, or waiting for someone who knows SQL. By the time the answer arrives, the meeting may be over. And when a number appears without the query behind it, it is hard to know whether to trust it.
 
-The app uses Supabase Auth for email/password sign-up and sign-in. Create a Supabase project, enable email authentication, then create `.env.local` with `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` set to the project URL and public anon key. Configure the Supabase Site URL and allowed redirect URLs for your local and deployed app URLs. Restart the Vite dev server after changing environment variables. Never put the Supabase `service_role` key in this frontend or share it in chat.
+## A clearer way to ask
 
-All `/app` routes require a signed-in account. Only the authenticated `demo@gmail.com` account gets the generated Northwind demo analytics; other accounts see an empty sales-data state. Create and verify `demo@gmail.com` in Supabase Auth, then sign in with the password you set there. Ordinary users do not yet have a data-import path, and the simulated connector changes remain browser-local.
+RetailMind is built around a simple idea: ask a business question in plain language, then inspect the SQL and results used to answer it. The experience brings together:
 
-The demo data is generated in the frontend and is fictional—not private customer data. This email-based demo switch is for the prototype only; it is not database row-level security. Before loading real business data, move it behind Supabase tables with owner IDs and row-level security policies.
+- A dashboard for revenue, margin, average order value, retention, product velocity, and stock alerts.
+- Ask AI responses with a summary, chart, result table, and inspectable SQL.
+- A connector walkthrough showing how retail data sources could be connected.
 
-## Data
+## Experience the live demo
 
-The demo account reads from `src/data/seed.ts`, a deterministic generator
-(about 95k orders, 20k customers, 58 products, 8 connectors) calibrated so the last 30 days land on:
-revenue $1.24M (+12.4% vs the previous 30 days), net margin 28.4%, AOV $142.50, retention 42.1%.
-All dashboard numbers, charts and Ask AI tables for that account are computed from the same rows. Other accounts do not load this dataset.
+Visit **[retail-mind-eight.vercel.app](https://retail-mind-eight.vercel.app/)** to explore the live website and interactive product walkthrough.
 
-Check the calibration any time: `npx tsx scripts/check-seed.ts`
+## Screenshots
 
-### Prototype SQL files
+### Ask a retail question and inspect its answer
 
-`db/schema.sql` and `db/seed.sql` are prototype/demo scripts with no per-user ownership or row-level security. They are not wired to the app and must not be used to store real multi-user data. For an isolated demo database, run `db/schema.sql` then `db/seed.sql`; a full-year seed can be generated with `npm run db:seed -- --days=365`.
+![RetailMind landing page with a sample natural-language question and analytics result](public/screenshots/landing.png)
 
-## Ask AI
+### Follow the workflow from data sources to analysis
 
-Scripted, not a live model. Six analyses are matched by keyword and run against the seed data
-(`src/data/askEngine.ts`): margin decline, Q3 regions, VIP lifetime value, 14-day stock-outs, channel trend,
-category profit. Anything else returns an honest fallback with suggestions. The SQL shown is valid PostgreSQL
-for `db/schema.sql`. Wiring a real text-to-SQL model means replacing `answer()` and executing through a read-only role.
+![RetailMind product walkthrough showing the connector setup step](public/screenshots/walkthrough.png)
 
-## Connectors
+## Built with
 
-The add-connector wizard and test flow are simulated (DNS, TCP ping, TLS, auth, schema introspection) with a
-toggle to simulate an authentication failure. No credentials leave the browser. CSV upload parses the real file header.
+React, TypeScript, Vite, Tailwind CSS, Recharts, and Framer Motion.
