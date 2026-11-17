@@ -12,8 +12,10 @@ import { cn, sleep } from "@/lib/utils";
 import { useAuth } from "@/auth/AuthContext";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { isDemoEmail } from "@/config";
+import { UploadConnectors } from "@/components/workspace/UploadConnectors";
 
-export default function Connectors() {
+/** The original simulated connectors, kept for the sample demo account only. */
+function SimulatedConnectors() {
   const { user } = useAuth();
   const isDemoAccount = isDemoEmail(user?.email);
   const accountId = user?.id ?? "anonymous";
@@ -111,4 +113,9 @@ export default function Connectors() {
       <AddConnectorDialog open={open} onOpenChange={setOpen} onSave={add} />
     </div>
   );
+}
+
+export default function Connectors() {
+  const { user } = useAuth();
+  return isDemoEmail(user?.email) ? <SimulatedConnectors /> : <UploadConnectors />;
 }

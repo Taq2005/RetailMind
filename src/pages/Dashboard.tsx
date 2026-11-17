@@ -12,7 +12,7 @@ import { CategoryDonut } from "@/components/dashboard/CategoryDonut";
 import { VelocityList } from "@/components/dashboard/VelocityList";
 import { Reveal, Skeleton, Stagger } from "@/components/motion/primitives";
 import { cn, fmtUSD } from "@/lib/utils";
-import { NoSalesData } from "@/components/NoSalesData";
+import { DataOverview } from "@/components/workspace/DataOverview";
 
 function Panel({ title, sub, action, children, className }: { title: string; sub?: string; action?: React.ReactNode; children: React.ReactNode; className?: string }) {
   return (
@@ -51,7 +51,7 @@ export default function Dashboard() {
     };
   }, [db, range, channel]);
 
-  if (!isDemoAccount) return <NoSalesData />;
+  if (!isDemoAccount) return <DataOverview />;
 
   return (
     <div className="mx-auto max-w-[1280px] px-4 pb-16 pt-8 sm:px-6">

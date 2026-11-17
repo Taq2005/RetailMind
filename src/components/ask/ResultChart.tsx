@@ -5,8 +5,10 @@ import { C, CATEGORY_COLORS, SERIES_COLORS } from "@/components/charts/theme";
 import { TipCard } from "@/components/charts/Tip";
 import { fmtUSD, money } from "@/lib/utils";
 
-const fmtAxis = (kind: "pct" | "usd" | "num1") => (v: number) => (kind === "pct" ? `${v}%` : kind === "usd" ? fmtUSD(v, { compact: true }) : String(v));
-const fmtVal = (kind: "pct" | "usd" | "num1", v: number) => (kind === "pct" ? `${v.toFixed(1)}%` : kind === "usd" ? fmtUSD(v) : `${v.toFixed(1)} days`);
+const compactNum = (v: number) => new Intl.NumberFormat("en-US", { notation: "compact", maximumFractionDigits: 1 }).format(v);
+const fullNum = (v: number) => v.toLocaleString("en-US", { maximumFractionDigits: 2 });
+const fmtAxis = (kind: "pct" | "usd" | "num1" | "num") => (v: number) => (kind === "pct" ? `${v}%` : kind === "usd" ? fmtUSD(v, { compact: true }) : kind === "num" ? compactNum(v) : String(v));
+const fmtVal = (kind: "pct" | "usd" | "num1" | "num", v: number) => (kind === "pct" ? `${v.toFixed(1)}%` : kind === "usd" ? fmtUSD(v) : kind === "num" ? fullNum(v) : `${v.toFixed(1)} days`);
 const tick = { fill: C.axis, fontSize: 11 };
 
 export function ResultChart({ spec }: { spec: ChartSpec }) {
@@ -71,7 +73,7 @@ export function ResultChart({ spec }: { spec: ChartSpec }) {
             <Tooltip
               cursor={{ fill: "rgb(63 79 196 / 0.06)" }}
               content={({ active, payload, label }) =>
-                active && payload?.length ? <TipCard title={label} rows={[{ color: C.ink, label: spec.valueKey === "cover" ? "Cover" : "Value", value: fmtVal(spec.yFormat, Number(payload[0].value)) }]} /> : null
+                active && payload?.length ? <TipCard title={label} rows={[{ color: C.ink, label: spec.valueLabel ?? (spec.valueKey === "cover" ? "Cover" : "Value"), value: fmtVal(spec.yFormat, Number(payload[0].value)) }]} /> : null
               }
             />
             {spec.refLine && <ReferenceLine x={spec.refLine.value} stroke={C.amber} strokeDasharray="4 4" label={{ value: spec.refLine.label, fill: "#9A6A1B", fontSize: 11, position: "top" }} />}
@@ -87,6 +89,7 @@ export function ResultChart({ spec }: { spec: ChartSpec }) {
   }
 
   const total = spec.data.reduce((s, d) => s + d.value, 0);
+  const fmtD = (v: number) => (spec.unit === "num" ? fullNum(v) : money(v));
   const data = spec.data.map((d, i) => ({ ...d, fill: CATEGORY_COLORS[i % CATEGORY_COLORS.length] }));
   const active = hover === null ? null : data[hover];
   return (
@@ -114,8 +117,8 @@ export function ResultChart({ spec }: { spec: ChartSpec }) {
         </ResponsiveContainer>
         <div className="pointer-events-none absolute inset-0 grid place-items-center text-center">
           <div>
-            <div className="num text-2xl font-semibold tracking-[-0.03em] text-slate-900">{active ? money(active.value) : money(total)}</div>
-            <div className="mt-0.5 text-xs text-slate-500">{active ? `${active.name}, ${((active.value / total) * 100).toFixed(1)}%` : "Q3 revenue"}</div>
+            <div className="num text-2xl font-semibold tracking-[-0.03em] text-slate-900">{active ? fmtD(active.value) : fmtD(total)}</div>
+            <div className="mt-0.5 text-xs text-slate-500">{active ? `${active.name}, ${((active.value / total) * 100).toFixed(1)}%` : spec.centerLabel ?? "Q3 revenue"}</div>
           </div>
         </div>
       </div>
@@ -125,7 +128,7 @@ export function ResultChart({ spec }: { spec: ChartSpec }) {
             <button onMouseEnter={() => setHover(i)} onFocus={() => setHover(i)} onBlur={() => setHover(null)} className="flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left text-[13px] transition-colors hover:bg-slate-50">
               <span className="h-2.5 w-2.5 rounded-[3px]" style={{ background: d.fill }} />
               <span className="flex-1 text-slate-700">{d.name}</span>
-              <span className="num font-medium text-slate-900">{money(d.value)}</span>
+              <span className="num font-medium text-slate-900">{fmtD(d.value)}</span>
             </button>
           </li>
         ))}

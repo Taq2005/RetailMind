@@ -11,7 +11,7 @@ type Status = "demo" | "planned";
 const FEATURES: { name: string; body: string; status: Status; to?: string }[] = [
   { name: "Ask AI", body: "Type a question about sales, stock or margin. Get a short summary, a chart, a sortable table and the read-only SQL behind it.", status: "demo", to: "/app/ask" },
   { name: "Overview dashboard", body: "Revenue, profit margin, average order value and customer retention, with category, product-velocity and low-stock views. Filter by date range and channel.", status: "demo", to: "/app" },
-  { name: "Connectors", body: "Connect PostgreSQL, Snowflake, Shopify or a CSV export. The demo walks through the connection test and schema preview, though the connections themselves are simulated.", status: "demo", to: "/app/connectors" },
+  { name: "Connectors", body: "Upload CSV or Excel files and ask questions about them. PostgreSQL, Snowflake and Shopify connectors are planned; the demo account shows a simulated version of how they would connect.", status: "demo", to: "/app/connectors" },
   { name: "Briefs and reports", body: "Pin the answers that matter and assemble them into a one-page brief with figures, a chart and recommended actions for the buying team.", status: "planned" },
 ];
 

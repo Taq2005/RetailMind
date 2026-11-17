@@ -1,5 +1,6 @@
 import { Navigate, useLocation } from "react-router-dom";
 import { AppShell } from "@/components/layout/AppShell";
+import { WorkspaceProvider } from "@/data/workspace/WorkspaceContext";
 import { useAuth } from "./AuthContext";
 
 export function ProtectedApp() {
@@ -14,5 +15,9 @@ export function ProtectedApp() {
     return <Navigate to="/login" replace state={{ from: location }} />;
   }
 
-  return <AppShell key={user.id} />;
+  return (
+    <WorkspaceProvider key={user.id}>
+      <AppShell />
+    </WorkspaceProvider>
+  );
 }

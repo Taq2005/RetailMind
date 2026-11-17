@@ -9,7 +9,12 @@ import { loadDB } from "@/data/seed";
 import { Summary, ResponseCard } from "@/components/ask/ResponseCard";
 import { Skeleton } from "@/components/motion/primitives";
 import { useDB } from "@/hooks/useDB";
-import { NoSalesData } from "@/components/NoSalesData";
+import { PrivacyNote } from "@/components/workspace/PrivacyNote";
+import { UploadPrompt } from "@/components/workspace/UploadPrompt";
+import { useWorkspace } from "@/data/workspace/WorkspaceContext";
+import { askUploaded } from "@/data/workspace/askUploaded";
+import { callAsk } from "@/data/workspace/aiClient";
+import { suggestQuestions } from "@/data/workspace/suggest";
 
 type Step = "schema" | "sql" | "run";
 interface UserMsg {
@@ -38,6 +43,10 @@ const nextId = () => `m${++uid}`;
 
 export default function AskAI() {
   const { isDemoAccount } = useDB();
+  const ws = useWorkspace();
+  const hasData = isDemoAccount || ws.tables.length > 0;
+  const prompts = useMemo(() => (isDemoAccount ? SUGGESTED_PROMPTS : suggestQuestions(ws.tables, 6)), [isDemoAccount, ws.tables]);
+  const msgsRef = useRef<Msg[]>([]);
   const [params, setParams] = useSearchParams();
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [draft, setDraft] = useState("");
@@ -47,25 +56,38 @@ export default function AskAI() {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const bootstrapped = useRef(false);
 
+  msgsRef.current = msgs;
   const patch = useCallback((id: string, p: Partial<BotMsg>) => setMsgs((m) => m.map((x) => (x.id === id && x.role === "assistant" ? { ...x, ...p } : x))), []);
 
   const ask = useCallback(
     async (q: string) => {
       const question = q.trim();
-      if (!isDemoAccount || !question || busy) return;
+      if (!hasData || !question || busy) return;
       setBusy(true);
       setDraft("");
       const u: UserMsg = { id: nextId(), role: "user", text: question };
       const b: BotMsg = { id: nextId(), role: "assistant", question, step: "schema", reveal: 0 };
       setMsgs((m) => [...m, u, b]);
-      const dbPromise = loadDB();
-      await sleep(420);
-      patch(b.id, { step: "sql" });
-      await sleep(480);
-      patch(b.id, { step: "run" });
-      const db = await dbPromise;
-      await sleep(520);
-      const res = answer(db, question);
+      let res: AskResult | Fallback;
+      if (isDemoAccount) {
+        const dbPromise = loadDB();
+        await sleep(420);
+        patch(b.id, { step: "sql" });
+        await sleep(480);
+        patch(b.id, { step: "run" });
+        const db = await dbPromise;
+        await sleep(520);
+        res = answer(db, question);
+      } else {
+        const history = msgsRef.current
+          .filter((x): x is BotMsg => x.role === "assistant" && !!x.result)
+          .slice(-3)
+          .map((x) => ({ question: x.question, sql: x.result!.sql }));
+        await sleep(300);
+        res = ws.db
+          ? await askUploaded({ question, tables: ws.tables, db: ws.db, history, call: callAsk, onPhase: (p) => patch(b.id, { step: p }) })
+          : { intent: "fallback", message: "Your data engine is still starting. Try again in a moment.", suggestions: [] };
+      }
       if (res.intent === "fallback") {
         patch(b.id, { step: "done", fallback: res as Fallback, reveal: 1 });
         setBusy(false);
@@ -89,7 +111,7 @@ export default function AskAI() {
       patch(b.id, { step: "done", reveal: 1 });
       setBusy(false);
     },
-    [busy, isDemoAccount, patch]
+    [busy, isDemoAccount, hasData, patch, ws.db, ws.tables]
   );
 
   // Deep link from search / dashboard: /app/ask?q=...
@@ -114,7 +136,7 @@ export default function AskAI() {
     void ask(draft);
   };
 
-  if (!isDemoAccount) return <NoSalesData />;
+  if (!hasData) return <UploadPrompt title="Upload a file to start asking" />;
 
   return (
     <div className="mx-auto grid max-w-[1400px] gap-0 px-0 lg:h-[calc(100vh-3.5rem)] lg:grid-cols-[minmax(380px,440px)_minmax(0,1fr)]">
@@ -123,10 +145,14 @@ export default function AskAI() {
         <div className="flex-1 overflow-y-auto px-4 py-6 scrollbar-thin sm:px-6">
           {empty ? (
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}>
-              <h1 className="text-[26px] font-semibold leading-tight tracking-[-0.035em] text-slate-900">Ask about your stores, SKUs and customers</h1>
-              <p className="mt-2 max-w-sm text-sm leading-relaxed text-slate-500">Questions run as read-only SQL on Northwind Apparel &amp; Tech. You can inspect every query before trusting the answer.</p>
+              <h1 className="text-[26px] font-semibold leading-tight tracking-[-0.035em] text-slate-900">{isDemoAccount ? "Ask about your stores, SKUs and customers" : "Ask about your data"}</h1>
+              <p className="mt-2 max-w-sm text-sm leading-relaxed text-slate-500">
+                {isDemoAccount
+                  ? "Questions run as read-only SQL on Northwind Apparel & Tech. You can inspect every query before trusting the answer."
+                  : `Questions become read-only SQL that runs on ${ws.tables.length === 1 ? "your file" : "your files"} in this browser. You can inspect every query before trusting the answer.`}
+              </p>
               <div className="mt-6 flex flex-wrap gap-2">
-                {SUGGESTED_PROMPTS.map((p, i) => (
+                {prompts.map((p, i) => (
                   <motion.button
                     key={p}
                     initial={{ opacity: 0, y: 8 }}
@@ -195,6 +221,7 @@ export default function AskAI() {
             </button>
           </div>
           <p className="mt-2 px-1 text-[11px] text-slate-400">Enter to send, Shift+Enter for a new line</p>
+          {!isDemoAccount && <PrivacyNote className="mt-1.5 px-1 text-[11px]" />}
         </form>
       </section>
 

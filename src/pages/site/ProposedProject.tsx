@@ -19,7 +19,7 @@ const BENEFITS = [
   { t: "Works with what shops already use", b: "It connects to existing systems and exports rather than asking a retailer to start over." },
 ];
 
-const IN = ["Plain-English questions about sales, stock and margin", "Chart, table and read-only SQL for every answer", "Connectors for PostgreSQL, Snowflake, Shopify and CSV", "An overview dashboard with date and channel filters"];
+const IN = ["Plain-English questions about sales, stock and margin", "Chart, table and read-only SQL for every answer", "CSV and Excel upload today, with PostgreSQL, Snowflake and Shopify connectors planned", "An overview dashboard with date and channel filters"];
 const OUT = ["Writing to or changing a retailer's data", "Predictions presented as certainties", "Answers to questions it cannot map to the data"];
 
 export default function ProposedProject() {

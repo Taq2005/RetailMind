@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { toast } from "sonner";
@@ -11,6 +11,8 @@ import { Bell } from "lucide-react";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { NAV } from "./nav";
 import { SUGGESTED_PROMPTS } from "@/data/askEngine";
+import { useWorkspace } from "@/data/workspace/WorkspaceContext";
+import { suggestQuestions } from "@/data/workspace/suggest";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { useAuth } from "@/auth/AuthContext";
@@ -230,6 +232,9 @@ export function Header({ onOpenMobileNav }: { onOpenMobileNav: () => void }) {
 
 function SearchDialog({ open, onOpenChange, isDemoAccount }: { open: boolean; onOpenChange: (o: boolean) => void; isDemoAccount: boolean }) {
   const navigate = useNavigate();
+  const { tables } = useWorkspace();
+  const canAsk = isDemoAccount || tables.length > 0;
+  const suggested = useMemo(() => (isDemoAccount ? SUGGESTED_PROMPTS : suggestQuestions(tables, 5)), [isDemoAccount, tables]);
   const [value, setValue] = useState("");
   useEffect(() => {
     if (!open) setValue("");
@@ -248,7 +253,7 @@ function SearchDialog({ open, onOpenChange, isDemoAccount }: { open: boolean; on
           <CommandInput autoFocus value={value} onValueChange={setValue} placeholder="Jump to a page or ask a question" />
           <CommandList>
             <CommandEmpty>Nothing matches. Press Enter to ask it as a question.</CommandEmpty>
-            {isDemoAccount && value.trim().length > 2 && (
+            {canAsk && value.trim().length > 2 && (
               <CommandGroup heading="Ask AI">
                 <CommandItem value={`ask ${value}`} onSelect={() => ask(value)}>
                   <Sparkles /> Ask: <span className="truncate font-medium">{value}</span>
@@ -262,15 +267,17 @@ function SearchDialog({ open, onOpenChange, isDemoAccount }: { open: boolean; on
                 </CommandItem>
               ))}
             </CommandGroup>
+            {suggested.length > 0 && (
+              <CommandGroup heading="Suggested questions">
+                {suggested.map((p) => (
+                  <CommandItem key={p} value={`question ${p}`} onSelect={() => ask(p)}>
+                    <MessageSquareText /> {p}
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            )}
             {isDemoAccount && (
               <>
-                <CommandGroup heading="Suggested questions">
-                  {SUGGESTED_PROMPTS.map((p) => (
-                    <CommandItem key={p} value={`question ${p}`} onSelect={() => ask(p)}>
-                      <MessageSquareText /> {p}
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
                 <CommandGroup heading="Recent">
                   <CommandItem value="recent loyalty" onSelect={() => go("/app/connectors")}>
                     <AlertTriangle /> Loyalty Platform connector

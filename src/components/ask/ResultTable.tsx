@@ -17,6 +17,9 @@ export function ResultTable({ result }: { result: AskResult }) {
     });
   }, [result, sort]);
 
+  const ids = useMemo(() => new Map(result.rows.map((r, i) => [r, i])), [result.rows]);
+  const animate = rows.length <= 150;
+
   const toggle = (key: string) => setSort((s) => (!s || s.key !== key ? { key, dir: -1 } : s.dir === -1 ? { key, dir: 1 } : null));
 
   const exportCsv = () => {
@@ -24,7 +27,7 @@ export function ResultTable({ result }: { result: AskResult }) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `retailmind-${result.intent}-2026-11-14.csv`;
+    a.download = result.engine === "upload" ? `retailmind-${result.intent}-${new Date().toISOString().slice(0, 10)}.csv` : `retailmind-${result.intent}-2026-11-14.csv`;
     document.body.appendChild(a);
     a.click();
     a.remove();
@@ -63,17 +66,25 @@ export function ResultTable({ result }: { result: AskResult }) {
           </thead>
           <tbody>
             {rows.map((r, i) => (
-              <motion.tr key={String(r[result.columns[0].key])} layout="position" transition={{ type: "spring", stiffness: 500, damping: 40 }} className="group">
+              <Row key={ids.get(r)} animate={animate}>
                 {result.columns.map((c) => (
                   <td key={c.key} className={cn("whitespace-nowrap border-b border-slate-100 px-2.5 py-2 text-slate-700 transition-colors group-hover:bg-slate-50 group-last:border-b-0", c.align === "right" && "num text-right", i === 0 && !sort && c === result.columns[0] && "font-medium text-slate-900")}>
-                    {formatCell(r[c.key], c.format)}
+                    {formatCell(r[c.key], c.format) || "–"}
                   </td>
                 ))}
-              </motion.tr>
+              </Row>
             ))}
           </tbody>
         </table>
       </div>
     </div>
+  );
+}
+
+function Row({ animate, children }: { animate: boolean; children: React.ReactNode }) {
+  return animate ? (
+    <motion.tr layout="position" transition={{ type: "spring", stiffness: 500, damping: 40 }} className="group">{children}</motion.tr>
+  ) : (
+    <tr className="group">{children}</tr>
   );
 }

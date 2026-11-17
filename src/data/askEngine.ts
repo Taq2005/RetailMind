@@ -6,7 +6,7 @@
 import { N_DAYS, TODAY_IDX, dayIndex, dayIso, isCounted, type DB } from "./seed";
 
 export type Seg = string | { b: string };
-export type ColFormat = "text" | "usd" | "int" | "pct" | "pts" | "num1" | "date";
+export type ColFormat = "text" | "usd" | "int" | "pct" | "pts" | "num1" | "num" | "date";
 export interface Column {
   key: string;
   label: string;
@@ -14,23 +14,28 @@ export interface Column {
   align?: "left" | "right";
 }
 export type ChartSpec =
-  | { kind: "line"; xKey: string; series: { key: string; label: string }[]; data: Record<string, string | number>[]; yFormat: "pct" | "usd" }
-  | { kind: "bar"; xKey: string; series: { key: string; label: string }[]; data: Record<string, string | number>[]; yFormat: "pct" | "usd" }
-  | { kind: "hbar"; labelKey: string; valueKey: string; data: Record<string, string | number>[]; yFormat: "usd" | "num1"; refLine?: { value: number; label: string } }
-  | { kind: "donut"; data: { name: string; value: number }[] };
+  | { kind: "line"; xKey: string; series: { key: string; label: string }[]; data: Record<string, string | number>[]; yFormat: "pct" | "usd" | "num" }
+  | { kind: "bar"; xKey: string; series: { key: string; label: string }[]; data: Record<string, string | number>[]; yFormat: "pct" | "usd" | "num" }
+  | { kind: "hbar"; labelKey: string; valueKey: string; valueLabel?: string; data: Record<string, string | number>[]; yFormat: "usd" | "num1" | "num"; refLine?: { value: number; label: string } }
+  | { kind: "donut"; data: { name: string; value: number }[]; unit?: "usd" | "num"; centerLabel?: string };
 
 export interface AskResult {
   id: string;
   intent: string;
   title: string;
   summary: Seg[];
-  chart: ChartSpec;
+  /** null when the result shape doesn't suit a chart (uploaded data only). */
+  chart: ChartSpec | null;
   sql: string;
   columns: Column[];
   rows: Record<string, string | number>[];
   latencyMs: number;
   rowsScanned: number;
   followUps: string[];
+  /** "upload" results come from the user's own files, run in their browser. */
+  engine?: "demo" | "upload";
+  truncated?: boolean;
+  totalRows?: number;
 }
 export interface Fallback {
   intent: "fallback";
@@ -625,7 +630,11 @@ export function answer(db: DB, question: string): AskResult | Fallback {
 
 /** Render a cell for the table and for CSV export. */
 export function formatCell(v: string | number, f: ColFormat): string {
-  if (typeof v === "string") return f === "date" ? new Date(v + "T00:00:00Z").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" }) : v;
+  if (typeof v === "string") {
+    if (f === "date" && /^\d{4}-\d{2}-\d{2}$/.test(v)) return new Date(v + "T00:00:00Z").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" });
+    return v;
+  }
+  if (f === "num") return v.toLocaleString("en-US", { maximumFractionDigits: 2 });
   switch (f) {
     case "usd":
       return usd0(v);
@@ -643,11 +652,15 @@ export function formatCell(v: string | number, f: ColFormat): string {
 }
 
 export function toCsv(result: AskResult): string {
-  const esc = (s: string) => (/[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s);
+  // Strings starting with = + - @ are prefixed so spreadsheet apps never run them as formulas.
+  const esc = (s: string) => {
+    const safe = /^[=+\-@\t\r]/.test(s) ? `'${s}` : s;
+    return /[",\n\r]/.test(safe) ? `"${safe.replace(/"/g, '""')}"` : safe;
+  };
   const head = result.columns.map((c) => esc(c.label)).join(",");
   const body = result.rows.map((r) => result.columns.map((c) => {
     const v = r[c.key];
-    return esc(typeof v === "number" ? (c.format === "pct" || c.format === "pts" || c.format === "num1" ? v.toFixed(2) : String(Math.round(v * 100) / 100)) : String(v));
+    return typeof v === "number" ? (c.format === "pct" || c.format === "pts" || c.format === "num1" ? v.toFixed(2) : String(Math.round(v * 100) / 100)) : esc(String(v ?? ""));
   }).join(","));
   return [head, ...body].join("\n");
 }
